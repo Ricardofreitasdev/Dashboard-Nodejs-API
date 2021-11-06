@@ -2,6 +2,8 @@ const User = require("../model/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+
+//teste
 async function index(req, res) {
   const users = await User.findAll();
   res.status(200).json(users);
@@ -47,6 +49,7 @@ async function getUser(req, res) {
   });
 
   return res.json(user);
+
 }
 
 module.exports = { index, create, auth, getUser };
