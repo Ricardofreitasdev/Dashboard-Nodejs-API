@@ -2,43 +2,39 @@ const User = require("../model/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-
-
 async function index(req, res) {
   const users = await User.findAll({
-    attributes: ['id', 'name', 'email', 'role']
+    attributes: ["id", "name", "email", "role"],
   });
   res.status(200).json(users);
 }
 
-async function findOneById(req, res){
-  const { id } = req.params
+async function findOneById(req, res) {
+  const { id } = req.params;
 
-  const user = await User.findOne(
-    {
-      where:{
-        id
-      },
-      attributes: ['id', 'name', 'email', 'role']      
-    
-  })
+  const user = await User.findOne({
+    where: {
+      id,
+    },
+    attributes: ["id", "name", "email", "role"],
+  });
 
   res.status(200).json(user);
 }
 
 async function create(req, res) {
   const { name, email, password } = req.body;
-  const role = 'user'
+  const role = "user";
 
   const existEmail = await User.findOne({
-    where:{
-      email
-    }
-  })
+    where: {
+      email,
+    },
+  });
 
-  if(existEmail){
-  const message = {error: "e-mail já cadastrado"}
-  return res.json(message);
+  if (existEmail) {
+    const message = { error: "e-mail já cadastrado" };
+    return res.json(message);
   }
 
   const hashPassword = await bcrypt.hash(password, 10);
@@ -49,8 +45,6 @@ async function create(req, res) {
     role,
   });
 
-  console.log(user.id);
-  
   const token = jwt.sign({ id: user.id }, "123456");
   return res.status(201).json({ token });
 }
@@ -83,29 +77,57 @@ async function getUser(req, res) {
   });
 
   return res.json(user);
-
 }
 
 async function deleteUser(req, res) {
-  const { id } = req.params
-  const loggedUser = req.userId
+  const { id } = req.params;
+  const loggedUser = req.userId;
 
-  console.log(loggedUser);
-  console.log(id);
-
-  if(loggedUser == id){
-    const message = {error: "Você não pode se excluir"}
+  if (loggedUser == id) {
+    const message = { error: "Você não pode se excluir" };
     return res.json(message);
   }
 
   const user = await User.destroy({
-    where:{
-      id
-    }
-  })
+    where: {
+      id,
+    },
+  });
 
   return res.json(user);
-
 }
 
-module.exports = { index, create, auth, getUser, deleteUser, findOneById };
+async function updateUser(req, res) {
+  const { id } = req.params;
+  const { name, email, role } = req.body;
+
+  const user = await User.findOne({
+    where: {
+      id: id,
+    },
+  });
+
+  if (!name || !email || !role) {
+    const message = { error: "Dados invalidos" };
+    return res.json(message);
+  }
+
+  user.name = name;
+  user.email = email;
+  user.role = role;
+
+  await user.save();
+
+  const message = { sucess: "Dados atualizados com sucesso" };
+  return res.json(message);
+}
+
+module.exports = {
+  index,
+  create,
+  auth,
+  getUser,
+  deleteUser,
+  findOneById,
+  updateUser,
+};
