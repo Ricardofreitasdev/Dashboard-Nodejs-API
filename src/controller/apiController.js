@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 async function index(req, res) {
   const users = await User.findAll({
-    attributes: ["id", "name", "email", "role"],
+    attributes: ["avatar", "name", "email", "role", "id"],
   });
   res.status(200).json(users);
 }
@@ -16,7 +16,7 @@ async function findOneById(req, res) {
     where: {
       id,
     },
-    attributes: ["id", "name", "email", "role"],
+    attributes: ["id", "name", "email", "role", "avatar"],
   });
 
   res.status(200).json(user);
@@ -99,7 +99,13 @@ async function deleteUser(req, res) {
 
 async function updateUser(req, res) {
   const { id } = req.params;
+  let avatar_url = null;
+
   const { name, email, role } = req.body;
+
+  if (req.file) {
+    avatar_url = `http://localhost:3333/uploads/${req.file.filename}`;
+  }
 
   const user = await User.findOne({
     where: {
@@ -116,9 +122,64 @@ async function updateUser(req, res) {
   user.email = email;
   user.role = role;
 
+  if (avatar_url) {
+    user.avatar = avatar_url;
+  }
+
   await user.save();
 
   const message = { sucess: "Dados atualizados com sucesso" };
+  return res.json(message);
+}
+
+async function updatePassByAdmin(req, res) {
+  const { newPass } = req.body;
+  const { id } = req.params;
+
+  console.log("here");
+  const user = await User.findOne({
+    where: {
+      id,
+    },
+    attributes: ["password", "id"],
+  });
+
+  const hashPassword = await bcrypt.hash(newPass, 10);
+  user.password = hashPassword;
+
+  await user.save();
+
+  const message = { sucess: "Senha atualizada" };
+  return res.json(message);
+}
+
+async function updatePass(req, res) {
+  const { oldPass, newPass } = req.body;
+
+  const { id } = req.params;
+
+  const user = await User.findOne({
+    where: {
+      id,
+    },
+    attributes: ["password", "id"],
+  });
+
+  const isvalid = await bcrypt.compare(oldPass, user.password);
+
+  if (!isvalid) {
+    const message = { error: "Senha antiga é inválida" };
+    return res.json(message);
+  }
+
+  const hashPassword = await bcrypt.hash(newPass, 10);
+  user.password = hashPassword;
+
+  console.log(user);
+
+  await user.save();
+
+  const message = { sucess: "Senha atualizada" };
   return res.json(message);
 }
 
@@ -130,4 +191,6 @@ module.exports = {
   deleteUser,
   findOneById,
   updateUser,
+  updatePass,
+  updatePassByAdmin,
 };
