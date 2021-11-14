@@ -1,4 +1,5 @@
 (async () => {
+  require("dotenv").config();
   const express = require("express");
   const apiRoutes = require("./routes/api");
   const cors = require("cors");
@@ -17,7 +18,7 @@
   app.use("/api", apiRoutes);
  
 
-  app.listen(3333, () => {
+  app.listen(process.env.PORT || 3333, () => {
     console.log("server running");
   });
 })();
