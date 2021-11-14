@@ -104,7 +104,7 @@ async function updateUser(req, res) {
   const { name, email, role } = req.body;
 
   if (req.file) {
-    avatar_url = `http://localhost:3333/uploads/${req.file.filename}`;
+    avatar_url = `https://backend-dashboard-api.herokuapp.com/uploads/${req.file.filename}`;
   }
 
   const user = await User.findOne({
